@@ -32,3 +32,8 @@ hs_err_pid*
 
 #Project folders
 /data
+
+#Project Files
+*chat*.txt
+*.csv
+
