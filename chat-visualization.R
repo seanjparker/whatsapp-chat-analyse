@@ -4,6 +4,7 @@ library("tm")
 library("scales")
 library("xtable")
 library("fmsb")
+library("reshape2")
 
 options(xtable.floating = FALSE)
 options(xtable.timestamp = "")
@@ -121,13 +122,33 @@ legend(x=0.9, y=0.5, legend = pNames, bty = "n", pch=20 , col=colors_in , text.c
 #Close the pdf file
 dev.off()
 
-#g <- ggplot(data, aes(class))
-#g + geom_bar(aes(fill=drv))
-#ggsave(filename="timelinePlot.pdf", plot=g)
+#Next, we plot the messages on a continuous bar-time chart
+#Combine the two people into a data frame, we find the number of messages sent each day
+msgsByDay <- as.data.frame(table(cut(dfP1$date, "1 day")))
+msgsByDay$Freq2 <- as.data.frame(table(cut(dfP2$date, "1 day")))[[2]]
+msgsByDay$Var1 <- strptime(msgsByDay$Var1, "%Y-%m-%d")
+colnames(msgsByDay) <- c("date", "msgs1", "msgs2")
 
+#For ggplot to work, we need time in POSIXct format
+msgsByDay$date <- as.POSIXct(msgsByDay$date, tz="Europe/London")
 
-cat(sprintf("%s wrote %d messages in total with a mean of %f words per message\n", pNames[1], totalMsgsByName[1], msgLP1Mean))
-cat(sprintf("%s wrote %d messages in total with a mean of %f words per message\n", pNames[2], totalMsgsByName[2], msgLP2Mean))
+#Finally, we need to convert our table to long format rather than wide
+msgsByDay.f <- melt(msgsByDay, id.vars="date")
 
-cat(sprintf("%s sent %d photos and %d videos\n", pNames[1], photosSentByP1, videosSentByP1))
-cat(sprintf("%s sent %d photos and %d videos\n", pNames[2], photosSentByP2, videosSentByP2))
+#Plot the graph
+g <- ggplot(data = msgsByDay.f, aes(x = date, y = value, fill = variable)) +
+  geom_bar(stat="identity") +
+    xlab("Date") +
+      ylab("Number of messages") +
+  scale_fill_manual(values = c("darkslategray3", "maroon3"), labels = pNames, name = "") +
+      scale_x_datetime(labels=date_format("%b %y"), breaks=date_breaks("1 month"))
+
+#Save the graph to a pdf file
+ggsave(filename="tex_data/timelinePlot.pdf", plot=g)
+
+cat("Done!")
+#cat(sprintf("%s wrote %d messages in total with a mean of %f words per message\n", pNames[1], totalMsgsByName[1], msgLP1Mean))
+#cat(sprintf("%s wrote %d messages in total with a mean of %f words per message\n", pNames[2], totalMsgsByName[2], msgLP2Mean))
+
+#cat(sprintf("%s sent %d photos and %d videos\n", pNames[1], photosSentByP1, videosSentByP1))
+#cat(sprintf("%s sent %d photos and %d videos\n", pNames[2], photosSentByP2, videosSentByP2))
