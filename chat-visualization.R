@@ -1,9 +1,10 @@
-require("ggplot2")
-require("plyr")
+library("ggplot2")
+library("plyr")
+library("tm")
 
 #Custom function for splitting a string and finding the number of words
 wordCount <- function(x) {
-  sapply(strsplit(x, " "), length)
+  sapply(strsplit(x, "[[:space:]]"), length)
 }
 
 #Read all the data from a csv into a data frame
@@ -17,7 +18,7 @@ df$date <- strptime(df$date, "%m/%d/%y, %I:%M:%S %p")
 
 #Find the total number of messages each user has sent
 occ <- count(df, "name")
-occ <- occ[order(-occ$freq),]
+occ = occ[order(-occ$freq),]
 pNames <- occ$name[1:2]
 totalMsgsByName <- occ$freq[1:2]
 
@@ -38,6 +39,16 @@ msgL <- data.frame(names=df$name, chr=apply(df, 2, wordCount)[,3])
 msgLP1Mean <- mean(unlist(subset(msgL, grepl(pNames[1], names), select=chr)))
 msgLP2Mean <- mean(unlist(subset(msgL, grepl(pNames[2], names), select=chr)))
 
+#Get the most commonly used words from all the messages for each person
+stopWords <- c("image", "omitted", "video", "audio", stopwords("en"))
+
+words1 <- tolower(unlist(strsplit(gsub("\\.", "", dfP1[,3]), " ")))
+corpus <- words1[!(words1 %in% stopWords)]
+mostUsedWordsP1 = sort(table(corpus), decreasing=T)[1:10]
+
+words2 <- tolower(unlist(strsplit(gsub("\\.", "", dfP2[,3]), " ")))
+corpus = words2[!(words2 %in% stopWords)]
+mostUsedWordsP2 = sort(table(corpus), decreasing=T)[1:10]
 
 cat(sprintf("%s wrote %d messages in total with a mean of %f words per message\n", pNames[1], totalMsgsByName[1], msgLP1Mean))
 cat(sprintf("%s wrote %d messages in total with a mean of %f words per message\n", pNames[2], totalMsgsByName[2], msgLP2Mean))
