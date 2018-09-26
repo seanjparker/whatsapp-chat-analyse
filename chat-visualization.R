@@ -9,7 +9,6 @@ library("reshape2")
 options(xtable.floating = FALSE)
 options(xtable.timestamp = "")
 
-
 setwd("/Users/seanparker/git/whatsapp-chat-analyse")
 #Custom function for splitting a string and finding the number of words
 wordCount <- function(x) {
@@ -50,6 +49,9 @@ photosSentByP2 <- count(subset(dfP2, grepl("image omitted", msg)), "msg")[1, 2]
 #Count the number of videos each person sent
 videosSentByP1 <- count(subset(dfP1, grepl("video omitted", msg)), "msg")[1, 2]
 videosSentByP2 <- count(subset(dfP2, grepl("video omitted", msg)), "msg")[1, 2]
+#Count the number of audios each person sent
+audiosSentByP1 <- count(subset(dfP1, grepl("audio omitted", msg)), "msg")[1, 2]
+audiosSentByP2 <- count(subset(dfP2, grepl("audio omitted", msg)), "msg")[1, 2]
 
 #Create a new data frame to find the length of each message
 #Then we find the mean of words sent in each message by each user
@@ -146,7 +148,75 @@ g <- ggplot(data = msgsByDay.f, aes(x = date, y = value, fill = variable)) +
 #Save the graph to a pdf file
 ggsave(filename="tex_data/timelinePlot.pdf", plot=g)
 
-cat("Done!")
+sink("tex_data/chatvisualise.tex")
+
+cat("\\documentclass{article}
+\\usepackage{coloremoji}
+\\usepackage{multicol}
+\\usepackage{xcolor}
+\\usepackage{graphicx}
+\\usepackage[margin=0.5in]{geometry}
+
+\\begin{document}
+
+\\pagecolor{white}
+\\definecolor{lb}{RGB}{35, 59, 78}
+
+\\pagenumbering{gobble}
+  \\centering
+  {\\Huge \\color{lb}\\textbf{Results}}
+  \\begin{multicols}{2}
+    {\\Large \\textbf{", as.character(pNames[1]), "}}\\\\
+    \\begin{center}
+    Messages sent: ", totalMsgsByName[1], "\\\\
+    \\bigskip
+    Pictures sent: ", photosSentByP1, "\\\\
+    \\bigskip
+    Videos sent:   ", videosSentByP1, "\\\\
+    \\bigskip
+    Audios sent:   ", audiosSentByP1, "\\\\
+    \\bigskip
+    Most used words:
+
+    \\input{mostUsedWords1}
+    \\end{center}
+
+    \\columnbreak
+
+    {\\Large \\textbf{", as.character(pNames[2]), "}}\\\\
+    \\begin{center}
+    Messages sent: ", totalMsgsByName[2], "\\\\
+    \\bigskip
+    Pictures sent: ", photosSentByP2, "\\\\
+    \\bigskip
+    Videos sent:   ", videosSentByP2, "\\\\
+    \\bigskip
+    Audios sent:   ", audiosSentByP2, "\\\\
+    \\bigskip
+    Most used words:
+
+    \\input{mostUsedWords2}
+    \\end{center}
+  \\end{multicols}
+  \\begin{center}
+  {\\huge \\color{lb}\\textbf{Messages per Weekday}}
+
+  \\includegraphics[scale=0.8]{msgPerWeekPlot.pdf}
+
+  {\\huge \\color{lb}\\textbf{Chronological Graph}}
+
+  \\includegraphics[]{timelinePlot.pdf}
+
+  \\bigskip
+  {\\large \\color{lb}\\textbf{Extra Information}}
+
+  ", as.character(pNames[1]) ," wrote with a mean average of ", msgLP1Mean, " words per message!\\\\
+  
+  ", as.character(pNames[2]) ," wrote with a mean average of ", msgLP2Mean, " words per message!
+  \\end{center}
+
+\\end{document}")
+sink()
 #cat(sprintf("%s wrote %d messages in total with a mean of %f words per message\n", pNames[1], totalMsgsByName[1], msgLP1Mean))
 #cat(sprintf("%s wrote %d messages in total with a mean of %f words per message\n", pNames[2], totalMsgsByName[2], msgLP2Mean))
 
