@@ -25,4 +25,4 @@ Next, I used R to perform text mining and data analysis in order to find data su
 
 Below is an example of the output once the LaTeX is compiled
 
-![Example compiled Latex from program output](https://seanjparker.me/images/repos/gh_main_wcv.jpg)
+![Example compiled Latex from program output](https://seanjparker.com/img/repos/gh_main_wcv.jpg)
